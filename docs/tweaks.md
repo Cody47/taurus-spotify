@@ -17,8 +17,6 @@
                                 backup and signing, the welcome tour
     tweak/Sources/Diagnostics/  screen dumps, the tree server and the main thread hang sampler of FLEX builds
     extension/LiveActivity/     the Live Activity widget, a WidgetKit extension of its own
-    extension/Downloads/        the Pixie download engine: a companion dylib and guarded patches to Spotify 9.1.90
-                                that enable its offline-download implementation (see its README)
     extension/AppGroups/        a dylib loaded by Spotify and its home screen widget that moves Spotify's App Groups
                                 into a group the re-signed IPA has; without it the widget stays a placeholder
     scripts/                    pipeline.sh (build + inject), build-extension.sh (the widget extension, without an
@@ -78,9 +76,6 @@ Shared:
                   rewritten on the way in (AdNetwork.x, Premium.m over the protobuf walker in Protobuf.m), with crossfade
                   and automix switched on in the player core and crossfade's switch kept in step with its slider (Crossfade.x)
     Privacy/      telemetry blocking and its counters
-    Downloads/    Mod Settings > Downloads and its runtime companion bridge. Spotify's own download controls use
-                  the companion dylib and guarded executable patches; without the companion, the page reports
-                  Downloads as unavailable
     ArtistBlock/  tracks by blocked artists skipped as they start (ArtistSkip.x), the list and the Blocked artists page under Player
     Flags/        Spotify's remote-config flags: the provider hook, the generated table, the All flags page and the Labs page
     Gestures/     the double tap zones on the player: the grid, what each cell does, the recognizer (each look hooks it on)
@@ -107,21 +102,12 @@ Shared:
                   lyrics and show the card. has_lyrics is forced on for every track, the walk starts at the track change
                   for it and the next, and the player's card-loading timeout flag is forced to its 5 s maximum while a
                   source is on
-    LockScreenLyrics/ the artist-name replacement in system Now Playing, and the full-screen lyric clips,
-                       shown as the standalone Lyrics style over blurred cover artwork
+    LockScreenLyrics/ the line being sung in the system's now playing
     LockScreenArtwork/ the track's Canvas or its album's Apple Music cover as the lock screen's animated
                   artwork, from iOS 26 (Apple takes an MPMediaItemAnimatedArtwork under one of
                   MPNowPlayingInfoCenter's animated artwork keys, and the mod puts one there through a second
-                  hook on setNowPlayingInfo:, so the lock screen artwork and lyric clips' rewrites of the same dictionary carry
-                  it). Lyrics does not require an animated source; each line is composited over blurred cover
-                  artwork. Fill
-                  generates a clip with a sharp cover fading into four progressive blur layers. The player
-                  menu selects the current lock-screen style; the lock-screen star cycles through its configured views.
-                  The star can
-                  cycle through Canvas, Lyrics, Fill, Colourful and Default; its order and enabled views are configurable.
-                  In Every song mode, Fallback album art size controls the square cover shown over the blurred
-                  fallback when no moving artwork or lyrics clip is available; 50% is the original size.
-                  The sources are asked in the user's order (Spotify Canvas, then Apple Music until set, on the
+                  hook on setNowPlayingInfo:, so the lock screen lyrics' rewrites of the same dictionary carry
+                  it). The sources are asked in the user's order (Spotify, then Apple Music until set, on the
                   shared Settings/SGOrderPage the lyrics sources use too). Spotify's URL comes off canvas.url
                   in the played track's metadata, which Spotify's core fills whatever
                   ios-feature-canvas.canvas_enabled says, and failing that from spotify.canvaz.cache with the
@@ -143,27 +129,18 @@ Shared:
                   run speed and pitch, audio effects, then music haptics. Graph changes and disposal exclude active pulls;
                   the render thread never waits for them. Unsupported formats retain Spotify's connection. The PCM
                   packet queue is bounded and generation-stamped. Sing's source read-ahead reads guarded queue metadata
-                  for the verified Spotify binary; PCM still comes through its AudioUnit. A one-time [spotifyglass]
-                  Sing diagnostic identifies a missing source unit, unsupported format, unverified read-ahead layout,
-                  or graph change when attachment fails. Boundary tests are in harness/audio/ and harness/sing/
+                  for the verified Spotify binary; PCM still comes through its AudioUnit. Boundary tests are in harness/audio/ and harness/sing/
     Sing/         the local Core ML separator, source-domain audio adapter, worker and player lifecycle, from iOS 18. Core ML
-                  uses Vitrine's Neural Engine model in the foreground and its warm CPU model in the background. The audible
-                  clock follows emitted source samples while delayed audio drains and never reports ahead of Spotify's
-                  source clock. Model loading overlaps source capture;
+                  uses the GPU in the foreground and its warm CPU model in the background. The audible
+                  clock follows emitted source samples while delayed audio drains. Model loading overlaps source capture;
                   verified continuous next-track PCM keeps its worker and reserve across a natural transition.
                   Redesigned/Lyrics owns the Now Playing microphone control and Mod Settings' Karaoke page. The voice
-                  model (about 201 MiB) is not in the IPA: SGSingModel.m downloads My-Name-Is-Jeff/vitrine-sing's
-                  separator-ane.mlmodelc in a
+                  model (about 470 MB) is not in the IPA: SGSingModel.m downloads its files from the model host in a
                   background URL session, checks each against a size and a SHA-256 pinned in the code, and moves
                   them into Application Support/spoti.pw/Sing only when all are right (SingModel.x reconnects at
-                  launch). Karaoke can optionally ignore thermal and memory warnings; the default retains both
-                  safeguards. AirPlay remains local playback and is processed after its route change; Spotify
-                  Connect, whose audio plays on another device, is not. Tested against harness/sing/ (the download
-                  against a local server, model_test.py)
-                  Spatial voice can place the vocals relative to head motion, with distance, room, and instrument
-                  width controls under Karaoke; it stays off until enabled and yields to spatial audio on the route.
+                  launch). Tested against harness/sing/ (the download against a local server, model_test.py)
     Player/       the player's open and close announced (PlayerEvents.x), what the player is doing read through
-                  one hook for every feature that wants it (PlayerState.x), the Lock Screen flags, and in the
+                  one hook for every feature that wants it (PlayerState.x), the lock screen widget's flags, and in the
                   more button's menu Speed and pitch: both done to Spotify's audio by Apple's time and pitch unit, put
                   between its mixer and its RemoteIO unit through Audio/SGAudioPipeline's connection
                   (SpeedPitchMenu.x, SpeedPitch.x, SGTimePitch.m). With Pitch follows speed on (the default, stored) the pitch
@@ -228,33 +205,18 @@ Redesigned:
                   Offline or Private Session under the bar), so the now playing bar and the pages move up with it. Laid out on
                   the Mac against harness/tabbar/
     NowPlayingBar/ the glass now playing bar (NowPlayingBar.x), with Spotify's device button on it hidden on request
-                  (BarConnect.x); all redesigned now-playing options are grouped under Player > Mini player
+                  (BarConnect.x, its own key and its own Now playing page, apart from the native look's)
     Player/       the redesigned full screen player (Player.h lists its files); its ⋯ opens a menu the way the
                   Music app draws one (PlayerMenu.x, SGRPlayerMenu.m): a pane of glass grown out of the button,
                   Add to playlist, Add to Queue and Share as three tiles across its top, groups of rows under
-                  them, Speed and pitch opening onto Shared/Player's sliders in place, then Lock Screen Style,
-                  Background Style's six choices (Still, Colors, Fluid, Animated, Visualiser and Fill), per-song
-                  Lyrics Background Blur and Lyrics Source choices, everything else Spotify
-                  offers under More, and Remove from this playlist last in red. Spotify's rows stay Spotify's:
-                  its own sheet still opens, out of sight, and the menu is read off its
+                  them, Speed and pitch opening onto Shared/Player's sliders in place, everything else Spotify
+                  offers under More, and Remove from this playlist last in red. What is in it and what each row
+                  does stay Spotify's: its own sheet still opens, out of sight, and the menu is read off its
                   table, each row placed by the number Spotify's ListRow carries as its identifier and fired
                   through that ListRow; a page Spotify pushes onto the sheet (Share's destinations) shows the
                   sheet, and a sheet with no rows within 4 s is shown as it is. It opens on the rows the last
                   menu had, kept across launches, and moves to Spotify's as they come in, a tap meanwhile held
-                  until they do. The Canvas field extends below the clip with a blurred poster bleed instead of
-                  stretched edge rows; the clip begins at the top of the visible player, as in the previous layout.
-                  Fill keeps the cover crisp, then blends it through progressively stronger blur into a dark tint sampled
-                  from the artwork's bottom edge, adapting Pulse-Ice/EeveeImmersive's layered treatment; it hides
-                  Spotify's normal cover, including when Animated uses Fill as its fallback. Player settings let the
-                  user choose Still, Colors, Fluid, Visualiser or Fill, with Fill as the default, for when Canvas is
-                  unavailable or cannot play.
-                  Player settings expose separate opacity sliders for its artwork and Canvas/lyrics blur layers.
-                  While lyrics are open over Animated, background blur is on by default and remembered per track;
-                  the Player settings and ⋯ menu control it, alongside the per-song lyrics source. The Mini player
-                  section has its own independently drawn progress line with a 0–5 pt thickness slider (2 pt by default), beside its
-                  rounded-square album art option; it does not resize or reuse the full-screen player's progress bar.
-                  Always on in the redesign.
-                  Tested in the simulator against harness/playermenu/
+                  until they do. Always on in the redesign. Tested in the simulator against harness/playermenu/
                   With Sing on and its voice model downloaded (Mod Settings > Karaoke, Redesigned/Lyrics/SingSettings.m,
                   both applying at once), its microphone (Redesigned/Lyrics/SGRSingControl.m) sits in the
                   lyrics' bottom trailing corner, opposite their glass button, and goes down with the lines when the
@@ -303,16 +265,11 @@ Redesigned:
                   everything the server sends is dropped -- more by the artist, videos, concerts, merch, you might also
                   like, and whatever it adds next -- but the album's own line and its copyright (Album.h lists its
                   files). A podcast's episode page is the same template, so it is given the same field, and what it
-                  paints over it is taken off. Its track-list rows use their RetrievalRow identifiers for the three
-                  options to hide album artists, all track artists or explicit tags. Laid out on the Mac against
-                  harness/album/
-    Artist/       the artist's photo dissolving into the black page, with its actions pinned above the scrolling
-                  header; Spotify's own three-dot menu stays in use on this page. Music-video rows and their headings
-                  are dropped; the page list invalidates cached row positions when pagination changes section counts
+                  paints over it is taken off. Laid out on the Mac against harness/album/
 
 App:
 
-    ModSettings.x  the root page and the row that opens it from Spotify's settings
+    ModSettings.x  the root page and the rows that open it from Spotify's settings and the side drawer
     Pages.m        the Appearance card with Redesigned UI, the Player and Lyrics pages, which Navbar page opens
     About/         the silent check against Taurus's GitHub Releases and the update alert at the top of Mod Settings;
                    backup, the signing warning and the Mod page with the reset
@@ -339,14 +296,9 @@ and Live Activity. The root page in `App/ModSettings.x` holds the Appearance car
     make log        # stream [spotifyglass] log lines from the phone
     make flags      # regenerate the flag table from the IPA
 
-Without a Mac or USB log streaming, open **Mod Settings → Mod → Device logs** in Spotify.
-The page shows the recent local diagnostic log, refreshes when pulled down, and provides Copy and
-Share actions. The file is kept in the app's Application Support directory and capped at 256 KiB;
-logs are not shared unless the user explicitly chooses Copy or Share.
-
 ## Mod Settings
 
-Mod Settings, opened by holding Home on the tab bar or from the
+Mod Settings, opened by holding Home on the tab bar or from the first row of the side drawer and the
 last row of Spotify's Settings, sorts every
 setting by the part of Spotify it changes, so a part's glass, its hide switches and its flags sit on
 one page, the mod's own rows first and Spotify's flags below them or on a sub page named after what
@@ -358,43 +310,14 @@ The pages show only what the stored look has: a page opened after flipping the s
 what the restart will bring. In the redesign Karaoke comes next, on a card of its own: Sing's switch and its
 voice model's download (Redesigned/Lyrics/SingSettings.m), with Off, On, No model or the download's percentage
                 beside the row, "Needs iOS 18" below iOS 18. Then a card of parts. Navbar: the tab editor of the stored look,
-each with its own list of tabs. Player: Gestures and Blocked artists (with the count on the row), which work
-with either look. In the redesigned look Appearance holds the profile-photo toggle and accent colour;
-Home page style and the Top picks first-shelf size are independent switches.
-With Home page off, Top picks enlarges the first shelf without changing the feed's order or hiding its heading.
-Regular shelf headings, including Jump back in and Recently played, stay visible.
-The redesigned Player page also has independent Show Sing button and Show Translate button
-switches, the six background styles (Still, Colors, Fluid, Animated, Visualiser and Fill), an Animated fallback
-choice (Still, Colors, Fluid, Visualiser or Fill, default Fill), per-song lyrics blur and lyrics-source choices,
-background opacity sliders for the artwork and each player blur layer, and its volume controls.
-Lyrics: the ordered list of lyrics sources, lyrics for every track,
-naming the source in the redesign, artist-name replacement on the lock screen,
-and glass lyrics in the native look; in the redesign also
-which of the lyrics, their pronunciation and their translation is set largest, Genius meaning marks (which can
-be hidden without losing the hold-on-a-line meaning sheet), and the translation's language. Player controls
-include independent portrait and landscape auto-hide switches for the lyrics screen. Lock Screen: its controls and, under Artwork, the full-screen style selector and ordered style hierarchy:
-Canvas (the track's Canvas or the album's Apple Music animated cover), Lyrics over the blurred cover,
-Fill artwork, Colourful (Every Song's moving-cover treatment), and Default (iOS's full album artwork).
-Show lock-screen lyrics can exclude the full-screen Lyrics view and legacy artwork overlays without
-changing the saved hierarchy, in-app lyrics or the artist-name lyrics setting. It is on until switched
-off and applies immediately; while off, direct selection, star cycling and Canvas fallback use artwork
-instead. Turning it back on makes the saved Lyrics choice available again.
-The first enabled style is used when star cycling is off; the star can cycle through enabled styles.
-If Canvas has no usable animation, the next enabled style is used for that track only, and Canvas is
-checked again on the next track. The redesigned player's ⋯ menu also selects the active lock-screen style.
-A "Needs iOS 26" row appears below that; artist-name and lock-screen lyrics can be kept exclusive by the setting.
-Audio effects follows Lock Screen, which appears between Lyrics and Audio effects on the root page.
-In the native look also Now playing bar (its device button and its flags), Queue & devices, and
+each with its own list of tabs. Lyrics, beside Player: the ordered list of lyrics sources, lyrics for every track,
+naming the source in the redesign, the lock screen, and glass lyrics in the native look; in the redesign also
+which of the lyrics, their pronunciation and their translation is set largest, and the translation's language.
+Player: Gestures, Blocked artists (with the count on the row) and Lock screen widget (its controls and, under Artwork, Animated lock screen, the track's Canvas or the album's Apple Music cover played behind the lock screen's controls, on until switched off, with a Sources page for their order, and a "Needs iOS 26" row below that), which work with either look;
+in the native look also Now playing bar (its device button and its flags), Queue & devices, and
 Spotify's own player screen (artwork background, glass header buttons, Disable Canvas and the sheet,
 header, slider and sticky header flags, the cards under the player and the lyrics preview and player
-buttons to hide); in the redesign the Player page's Mini player section groups the device button, moving
-background, mini-player merge/transition toggle, rounded-square artwork option for both the card and
-docked pill, and a 0–5 pt progress-bar thickness slider (2 pt by default).
-The Mod page's Clear cached files action removes only named tweak caches; it leaves Spotify downloads,
-Spotify-owned caches, imported lyrics and settings untouched.
-An optional volume slider is off by default, with its thumb hidden if enabled. The taurus settings page
-credits @Pulse-Ice for the Fill background treatment adapted from EeveeImmersive.
-Vibrations follows under either look, a card for
+buttons to hide); in the redesign instead Now playing (its device button and the moving background). Then Vibrations under either look, a card for
 Controls (on until switched off) and one for Music Haptics (off until switched on, with an ⓘ saying it
 follows the sound this iPhone plays while Spotify is open), each opening out while its switch is on:
 Controls into its Strength (10 to 100%, a tap at the new strength with each step), Music Haptics into its
@@ -409,15 +332,14 @@ out Off, On or how many effects are on. Home & Library, in the native look only:
 the Gradient page (the wash behind the top of Home in one of eight colours, at three strengths and
 four heights) and the Home flags, the parts of Home to hide including the DJ button and badge, the
 playlist header, buttons and pills to hide, and the Library flags. Then Premium, ads & privacy
-(EeveeSpotify's Hide ads and Hide upsells, on by default, hiding the video carousel and social proof in Search, and
+(EeveeSpotify's Hide ads and Hide upsells, hiding the video carousel and social proof in Search, and
 an Ad and upsell flags page under them, every switch there forcing a flag Spotify ships on to off;
-Spoof Premium, on by default, with Spotify's premium-gated Jam entry-point flag enabled so its Jam control can
-appear alongside Queue where Spotify supports it; Block telemetry; then what the ad
+Spoof Premium; Block telemetry; then what the ad
 blocking and the telemetry blocking have stopped) and Labs (features Spotify built and did not ship,
 AI Chat (Martini) first). Last, All flags, Spotify's remote-config flags with a search field and an
 Auto / Off / On control per flag (a text field for the number and text ones), and Mod: Updates
 (the row reads out where the build stands and opens the changelog of everything newer than it, read
-from published releases, with Check now, the release to get, all the releases and Tell
+from the releases Release Please cuts, with Check now, the release to get, all the releases and Tell
 me when one is out, the sheet a newer release brings up a few seconds after Spotify opens), the
 build and Spotify's version, the site and the repo, the welcome tour again and Reset all
 settings. A flag switch on a page forces that one flag and off leaves Spotify's own value, so the All
@@ -429,21 +351,12 @@ forced and take no touch. `Redesigned/Kit/SGRGlassDesign.x` holds the list; what
 registers in `Core/SGFlagForce.h`. A change shows after Spotify restarts.
 
 The tab editor on the Navbar page is the exception and applies as soon as the bar lays out again. It lists the tabs in the order
-the bar shows them: drag to reorder, use each row's switch to hide or show it, swipe to remove it, and tap a row to edit its name and icon.
-That works for Spotify's own tabs as well as tabs of the mod's own; icons can be Encore glyphs or SF Symbols.
-Built-in tabs keep their own Spotify Encore glyphs unless given a custom icon. Apple Music tab icons,
-off by default, uses Apple-style SF Symbols for built-in tabs unless that tab has a custom icon.
-Add a tab puts a page of Spotify's or any `spotify:` link on the bar. Spotify's own tabs are kept by the
-name under their icon, so removing one hides it until Use Spotify's order restores it; switching the app's language
+the bar shows them: drag to reorder, tap to hide or show, and Add a tab puts a page of Spotify's or
+any `spotify:` link on the bar with one of Encore's own glyphs. Spotify's own tabs are kept by the
+name under their icon, so they can be hidden but never removed, and switching the app's language
 starts the order over. A tab of the mod's own opens its link through Spotify's link dispatcher, so it
 never lights up as the tab you are on. Hide labels, on the same page, leaves the glass bar with its
-icons alone and applies straight away too. Spotify tabs can be hidden with their switches or removed from
-the editor; Use Spotify's order restores them. Compact player and tabs is on by default: while scroll-minimization
-is active, the glass bar narrows to the current tab and the wider mini-player fills the remaining row; it
-can be switched off independently from Player > Mini player > Mini player transition animations. That
-setting controls whether the bar merges into the compact tab while scrolling. The minimized tab uses its
-own square glass button, sized within the available row and aligned to the mini-player card, so UIKit's
-safe-area-dependent tab-item shape cannot squash it on different devices.
+icons alone and applies straight away too.
 
 ## Adding a feature
 

@@ -1,23 +1,39 @@
-<h1 align="center">Taurus.</h1>
+<p align="center">
+  <img src="docs/image.png" width="1000" alt="">
+</p>
 
-<p align="center">Open-Sourced fork of chroma.pw with built-in Spotify Premium. </p>
+<h1 align="center">taurus.</h1>
+
+<p align="center">The Open-Sourced, Human-Made, Awesome Tweak for Spotify that grants Free Premium and Liquid Glass UI.</p>
+<p align="center">https://taurus.lat</p>
 
 <p align="center">
   <img src="https://img.shields.io/badge/iOS-000000?style=for-the-badge&logo=ios&logoColor=white" alt="iOS">
-  <img src="https://img.shields.io/badge/Spotify-9.1.90-1ED760?style=for-the-badge&logo=spotify&logoColor=white" alt="Spotify 9.1.78">
+  <img src="https://img.shields.io/badge/Spotify-9.1.90-1ED760?style=for-the-badge&logo=spotify&logoColor=white" alt="Spotify 9.1.90">
   <img src="https://img.shields.io/badge/Objective--C-3A95E3?style=for-the-badge&logo=apple&logoColor=white" alt="Objective-C">
   <img src="https://img.shields.io/badge/GitHub_Actions-2671E5?style=for-the-badge&logo=githubactions&logoColor=white" alt="GitHub Actions">
 </p>
+<p align="center">
+  <img src="docs/banner.png" width="1200" height="630" alt="">
+</p>
+
 
 <p align="center">
+  <a href="https://gitlab.com/taurustweak/taurus">GitLab</a> ·  
   <a href="#build-it">Build it</a> ·
   <a href="docs/tweaks.md">Hack on it</a> ·
   <a href="#install-it">Install it</a>
 </p>
 
+<p align="center">
+  <img src="docs/screenshots/now-playing.webp" width="16%" alt="Full screen player with lyrics">
+  <img src="docs/screenshots/album.webp" width="16%" alt="Album">
+  <img src="docs/screenshots/playlist.webp" width="16%" alt="Playlist">
+  <img src="docs/screenshots/queue.webp" width="16%" alt="Queue">
+  <img src="docs/screenshots/live-activity.webp" width="16%" alt="Live Activity on the lock screen">
+</p>
 
-
-## Taurus: the free, open-sourced liquid glass spotify tweak 
+#### [We have moved the source code to GitLab!](https://gitlab.com/taurustweak/taurus)
 
 A no-jailbreak Theos tweak that rebuilds Spotify for iOS in Liquid Glass, injected into your own
 decrypted IPA and signed with your own certificate.
@@ -35,32 +51,26 @@ The redesign is `UIGlassEffect`, which only exists from iOS 26. Below that the R
 is greyed out and the mod runs Spotify's own screens with everything else it adds on top. Both live
 in Settings → Mod Settings.
 
-## Downloads
-
-Mod Settings → **Downloads** controls Spotify's offline downloads: download or check the current track
-or album, cancel a download, inspect quotas and device slots, and review status. Spotify's own download
-buttons also work; downloaded songs stay in Spotify's offline storage and play in Spotify.
-
-Downloads patching is verified for **Spotify 9.1.90**. Other versions build without the executable
-patch; pass `--no-downloads` to skip it explicitly. The engine is
-[Pixie](https://github.com/Glongq/Vitrine-Pixie), by Glongq; see `extension/Downloads/`.
-
 ## Install it
+
+A full installation guide is on our [Discord](https://discord.gg/9uXz5pgz6Z)
 
 Each
 [release](https://github.com/samj-exe/taurus/releases) carries the tweak's `.ipa`, install this `.ipa` file with any sideloader, such as SideStore or Feather. You do not need to build to project if you do not wish to.
 
-Add the release source to [SideStore or Feather](https://raw.githubusercontent.com/samj-exe/taurus/stable/altstore-source.json), or add the [ESign source](https://raw.githubusercontent.com/samj-exe/taurus/stable/esign-source.json) in ESign.
+[Add the release source to SideStore, Feather, and Most Signing Apps](https://altdirect.app/?url=https://taurus.lat/repo), or manually add the ESign source (https://taurus.lat/esign) in ESign or any ESign compatible app.
 
 ## Build it
 
-Bring a decrypted **Spotify 9.1.78 or 9.1.90** IPA; you get an unsigned
+Bring a decrypted **Spotify 9.1.90** IPA; you get an unsigned
 `Taurus-<mod version>.ipa` to sign with SideStore, Feather or any certificate signer. Each
 [release](https://github.com/samj-exe/taurus/releases) also carries the tweak's `.deb`.
 
 #### Build with GitHub Actions (recommended)
 
-Fork the repo, enable Actions, run **Build IPA from your own Spotify IPA**. It takes a direct link to
+Go to the [GitHub Import Page](https://github.com/new/import) and import the [GitLab Repo](https://gitlab.com/taurustweak/taurus) - wait for it to finish importing.
+
+Enable Actions, run **Build IPA from your own Spotify IPA**. It takes a direct link to
 your decrypted `.ipa` and hands the built IPA back as a workflow artifact. No Mac needed; the link is
 masked in the log and the result stays in your fork.
 
@@ -116,7 +126,3 @@ the view trees are read through.
 
 All modified and distributed code from chroma.pw is licensed under GPL-3.0, no code under PolyForm Strict License 1.0.0 is distributed. 
 Not affiliated with Spotify.
-
-## Safari link opener
-
-IPA builds include the Open in Spotify Safari extension. See [setup, coverage and verification](docs/safari-extension.md). Run `make test-safari` for regression checks; use `SAFARI=0` to build without it.
